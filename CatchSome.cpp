@@ -3,12 +3,52 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <stdlib.h>
 
 using namespace std;
 #define TESTSETFILE "template.txt"
 
 const bool debug = true;
-vector<int> bucketColors(vector<int> dColors) {
+
+class Dog {
+    private:
+    int color;
+    int position;
+    int observationCost;
+
+    public:
+    Dog(int, int);
+    int getColor();
+    int getPosition();
+    int getObsCost(int, int);
+}
+
+Dog::Dog(int P, int A) {
+    color = A;
+    position = P;
+}
+
+int Dog::getColor() {
+    return color;
+}
+
+int Dog::getPosition() {
+    return position;
+}
+
+int Dog::getObsCost(int bundlePosition, int bundleShirtColor) {
+    if (bundleShirtColor == color) {
+        return (abs(bundlePosition - position));
+    }
+    else if (bundlePosition == 0) {
+        return position;
+    }
+    else {
+        return (bundlePosition + position);
+    }
+}
+
+/*vector<int> bucketColors(vector<int> dColors) {
     int lastColor = 0;
     vector<int> buckets(1000, 0); //There can only be 1000 colors: 1 <= A(i) <= 1000
     for(int i = 0; i < dColors.size(); ++i) {
@@ -19,17 +59,19 @@ vector<int> bucketColors(vector<int> dColors) {
     }
     buckets.resize(lastColor + 1);
     return buckets;
-}
+}*/
 
+void findAllDogs(Dog& emptyList) {
+
+}
 int runTestCase(ifstream& inFile) {
     int numberOfDogs, dogsToObserve;
     int timeTaken = 0;
     inFile >> numberOfDogs >> dogsToObserve;
-    vector<int> dogPositions, dogColors;
-    dogPositions.reserve(numberOfDogs);
-    dogColors.reserve(numberOfDogs);
+    vector<Dog> allDogs;
+    allDogs.reserve(numberOfDogs);
     for(int i = 0; i < numberOfDogs; ++i) {
-        int buffer;
+        int posBuffer, ; //TODO: We get the positions all together first, then we get the colors all together. We need to construct dogs using position, color. How can we do this efficiently?
         inFile >> buffer;
         dogPositions.push_back(buffer);
     }
