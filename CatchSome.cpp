@@ -81,14 +81,25 @@ bool operator<(const Dog& a, const Dog& b) {
 }
 
 ostream& operator<<(ostream& os, const Dog& d) {
-    os << 'pos: ' << d.getPosition() << ' color: ' << d.getColor() << endl;
+    os << "pos: " << d.getPosition() << " color: " << d.getColor() << endl;
 }
 
 ostream& operator<<(ostream& os, const vector<Dog>& a) {
     int i = 0;
     for (Dog d : a) {
-        os << 'Dog (' << i << '): ' << d << endl;
+        os << "Dog (" << i << "): " << d; 
+        ++i;
     }
+}
+
+ostream& operator<<(ostream& os, const vector<int>& i) {
+    int n = 0;
+    os << "[";
+    for (int j : i) {
+        os << n << ": " << j << ", ";
+        ++n;
+    }
+    os << "]" << endl;
 }
 
 class Observer {
@@ -189,10 +200,14 @@ void observeNextDogs(vector<Dog>& remainingDogs, Observer& Bundle) {
             dogIndices.push_back(k);
             nextDogs = dogIndices;
         }
+        cout << nextDogs;
     }
+    int offset = 0;
     for(int index : nextDogs) {
-        Bundle.observeDog(remainingDogs[index]);
-        remainingDogs.erase(remainingDogs.begin() + index);
+        cout << "removing " << remainingDogs[index - offset];
+        Bundle.observeDog(remainingDogs[index - offset]);
+        remainingDogs.erase(remainingDogs.begin() + index - offset);
+        ++offset;
     }
 }
 
