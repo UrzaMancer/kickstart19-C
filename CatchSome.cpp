@@ -80,6 +80,17 @@ bool operator<(const Dog& a, const Dog& b) {
     return a.getPosition() < b.getPosition();
 }
 
+ostream& operator<<(ostream& os, const Dog& d) {
+    os << 'pos: ' << d.getPosition() << ' color: ' << d.getColor() << endl;
+}
+
+ostream& operator<<(ostream& os, const vector<Dog>& a) {
+    int i = 0;
+    for (Dog d : a) {
+        os << 'Dog (' << i << '): ' << d << endl;
+    }
+}
+
 class Observer {
     private:
     int position;
@@ -151,6 +162,7 @@ void findAllDogs(vector<Dog>& emptyList, ifstream& inFile) {
 }
 
 void observeNextDogs(vector<Dog>& remainingDogs, Observer& Bundle) {
+    cout << remainingDogs;
     int leastTime = remainingDogs[0].getObsCost(Bundle.getPosition(), Bundle.getShirtColor());
     int dogsToObserve = 1;
     vector<int> nextDogs = {0};
