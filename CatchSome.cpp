@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
+#include <algorithm>
 
 using namespace std;
 #define TESTSETFILE "template.txt"
@@ -41,13 +42,13 @@ class Dog {
     private:
     int color;
     int position;
-    int observationCost;
 
     public:
     Dog(int, int);
-    int getColor();
-    int getPosition();
-    int getObsCost(int, int);
+    int getColor() const;
+    int getPosition() const;
+    int getObsCost(int, int) const;
+
 };
 
 Dog::Dog(int P, int A) {
@@ -55,15 +56,15 @@ Dog::Dog(int P, int A) {
     position = P;
 }
 
-int Dog::getColor() {
+int Dog::getColor() const {
     return color;
 }
 
-int Dog::getPosition() {
+int Dog::getPosition() const {
     return position;
 }
 
-int Dog::getObsCost(int bundlePosition, int bundleShirtColor) {
+int Dog::getObsCost(int bundlePosition, int bundleShirtColor) const {
     if (bundleShirtColor == color) {
         return (abs(bundlePosition - position));
     }
@@ -73,6 +74,10 @@ int Dog::getObsCost(int bundlePosition, int bundleShirtColor) {
     else {
         return (bundlePosition + position);
     }
+}
+
+bool operator<(const Dog& a, const Dog& b) {
+    return a.getPosition() < b.getPosition();
 }
 
 class Observer {
@@ -88,7 +93,7 @@ class Observer {
     int getShirtColor();
     int getRemainingDogCount();
     int getTimeSoFar();
-    void observeDog(Dog);
+    void observeDog(const Dog&);
     void changeShirt(int);
 };
 
@@ -115,7 +120,7 @@ int Observer::getTimeSoFar() {
     return timeTaken;
 }
 
-void Observer::observeDog(Dog observationSubject) {
+void Observer::observeDog(const Dog& observationSubject) {
     if (shirtColor == observationSubject.getColor()) {
         timeTaken += abs(observationSubject.getPosition() - position);
         position = observationSubject.getPosition();
@@ -128,20 +133,6 @@ void Observer::observeDog(Dog observationSubject) {
         --dogsLeft;
     }
 }
-
-
-/*vector<int> bucketColors(vector<int> dColors) {
-    int lastColor = 0;
-    vector<int> buckets(1000, 0); //There can only be 1000 colors: 1 <= A(i) <= 1000
-    for(int i = 0; i < dColors.size(); ++i) {
-        buckets[dColors[i]]++;
-        if (dColors[i] > lastColor ) {
-            lastColor = dColors[i];
-        }
-    }
-    buckets.resize(lastColor + 1);
-    return buckets;
-}*/
 
 void findAllDogs(vector<Dog>& emptyList, ifstream& inFile) {
     vector<int> dogPosBuffer;
@@ -156,26 +147,47 @@ void findAllDogs(vector<Dog>& emptyList, ifstream& inFile) {
         Dog nextDog(dogPosBuffer[j], dogColorBuffer);
         emptyList.push_back(nextDog);
     }
+    std::sort(emptyList.begin(), emptyList.end());
 }
 
-int observeNextDog(vector<Dog>& remainingDogs, Observer& Bundle) {
-    int leastTime = 200001;
-    int nextDogIndex;
-    for ( int k = 0; k < remainingDogs.size(); ++k ) {
+void observeNextDogs(vector<Dog>& remainingDogs, Observer& Bundle) {
+    int leastTime = remainingDogs[0].getObsCost(Bundle.getPosition(), Bundle.getShirtColor());
+    int dogsToObserve = 1;
+    vector<int> nextDogs = {0};
+    for ( int k = 1; k < remainingDogs.size(); ++k ) {
         int thisCost = remainingDogs[k].getObsCost(Bundle.getPosition(), Bundle.getShirtColor());
+        int thisDogsSameColor = 1;
+        vector<int> dogIndices;
+        cout << "k=" << k << ", leastTime=" << leastTime << ", thisCost=" << thisCost << endl;
+        for ( int n = k - 1; n >= 0; --n ) {
+            if ( remainingDogs[k].getColor() == remainingDogs[n].getColor() ) {
+                ++thisDogsSameColor;
+                dogIndices.push_back(n);
+            }
+        }
+        thisCost = thisCost / thisDogsSameColor;
         if ( thisCost < leastTime ) {
-            thisCost = leastTime;
-            nextDogIndex = k;
+            leastTime = thisCost;
+            dogsToObserve = thisDogsSameColor;
+            dogIndices.push_back(k);
+            nextDogs = dogIndices;
+        }
+        else if ( ( thisCost == leastTime ) && ( thisDogsSameColor > dogsToObserve) ) {
+            dogsToObserve = thisDogsSameColor;
+            dogIndices.push_back(k);
+            nextDogs = dogIndices;
         }
     }
-    Bundle.observeDog(remainingDogs[nextDogIndex]);
-    return nextDogIndex;
+    for(int index : nextDogs) {
+        Bundle.observeDog(remainingDogs[index]);
+        remainingDogs.erase(remainingDogs.begin() + index);
+    }
 }
 
 int observeAllDogs(vector<Dog>& hiddenDogs, int dogsToObserve) {
     Observer Bundle(dogsToObserve);
     while ( Bundle.getRemainingDogCount() > 0 ) {
-        hiddenDogs.erase(hiddenDogs.begin() + observeNextDog(hiddenDogs, Bundle));
+        observeNextDogs(hiddenDogs, Bundle);
     }
     return Bundle.getTimeSoFar();
 }
@@ -186,40 +198,11 @@ int runTestCase(ifstream& inFile) {
     allDogs.reserve(numberOfDogs);
     findAllDogs(allDogs, inFile);
     return observeAllDogs(allDogs, dogsToObserve);
-    /*vector<int> buckets = bucketColors(dogColors);
-    vector<int> descendingColors;
-    descendingColors.reserve(dogsToObserve);
-    descendingColors.push_back(numberOfDogs + 1);
-    int observeCount = 0;
-    while (observeCount <= dogsToObserve) {
-        int commonColor = 0;
-        for(int j = 1; j < buckets.size(); ++j) {
-            if ((buckets[j] > commonColor) && (buckets[j] < buckets[descendingColors.back()])) {
-                commonColor = j;
-            }
-        }
-        descendingColors.push_back(commonColor);
-        observeCount += buckets[commonColor];
-        if (observeCount == 1) {
-            int maxPosition = 0;
-            for(int m = 0; m < numberOfDogs; ++m) {
-                timeTaken += 2*dogPositions[m];
-                if (dogPositions[m] > maxPosition) {
-                    maxPosition = dogPositions[m];
-                }
-            }
-            timeTaken -= maxPosition;
-            return timeTaken;
-        }
-    }
-    descendingColors.erase(descendingColors.begin());
-    int lastPosition = 0;
-    */
 }
 
 int main() {
     int totalTestCases;
-    int testCase = 0;
+    int testCase = 1;
     ifstream testSetInput;
     testSetInput.open(TESTSETFILE);
     if (testSetInput.is_open()) {
