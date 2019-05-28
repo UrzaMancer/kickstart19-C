@@ -37,6 +37,44 @@ Memory limit: 1GB.
 
 const bool debug = true;
 
+class Dog {
+    private:
+    int color;
+    int position;
+    int observationCost;
+
+    public:
+    Dog(int, int);
+    int getColor();
+    int getPosition();
+    int getObsCost(int, int);
+};
+
+Dog::Dog(int P, int A) {
+    color = A;
+    position = P;
+}
+
+int Dog::getColor() {
+    return color;
+}
+
+int Dog::getPosition() {
+    return position;
+}
+
+int Dog::getObsCost(int bundlePosition, int bundleShirtColor) {
+    if (bundleShirtColor == color) {
+        return (abs(bundlePosition - position));
+    }
+    else if (bundlePosition == 0) {
+        return position;
+    }
+    else {
+        return (bundlePosition + position);
+    }
+}
+
 class Observer {
     private:
     int position;
@@ -50,9 +88,9 @@ class Observer {
     int getShirtColor();
     int getRemainingDogCount();
     int getTimeSoFar();
-    void observeDog(int, int);
+    void observeDog(Dog);
     void changeShirt(int);
-}
+};
 
 Observer::Observer(int dogsToObserve) {
     position = 0; //new Observers start at home
@@ -91,43 +129,6 @@ void Observer::observeDog(Dog observationSubject) {
     }
 }
 
-class Dog {
-    private:
-    int color;
-    int position;
-    int observationCost;
-
-    public:
-    Dog(int, int);
-    int getColor();
-    int getPosition();
-    int getObsCost(int, int);
-}
-
-Dog::Dog(int P, int A) {
-    color = A;
-    position = P;
-}
-
-int Dog::getColor() {
-    return color;
-}
-
-int Dog::getPosition() {
-    return position;
-}
-
-int Dog::getObsCost(int bundlePosition, int bundleShirtColor) {
-    if (bundleShirtColor == color) {
-        return (abs(bundlePosition - position));
-    }
-    else if (bundlePosition == 0) {
-        return position;
-    }
-    else {
-        return (bundlePosition + position);
-    }
-}
 
 /*vector<int> bucketColors(vector<int> dColors) {
     int lastColor = 0;
@@ -142,8 +143,9 @@ int Dog::getObsCost(int bundlePosition, int bundleShirtColor) {
     return buckets;
 }*/
 
-void findAllDogs(Dog& empytList, ifstream& inFile) {
+void findAllDogs(vector<Dog>& emptyList, ifstream& inFile) {
     vector<int> dogPosBuffer;
+    int numberOfDogs = emptyList.capacity();
     dogPosBuffer.reserve(numberOfDogs);
     for(int i = 0; i < numberOfDogs; ++i) {
         inFile >> dogPosBuffer[i];
@@ -156,24 +158,24 @@ void findAllDogs(Dog& empytList, ifstream& inFile) {
     }
 }
 
-Dog observeNextDog(Dog& remainingDogs, Observer& Bundle) {
+int observeNextDog(vector<Dog>& remainingDogs, Observer& Bundle) {
     int leastTime = 200001;
-    Dog thisDog;
+    int nextDogIndex;
     for ( int k = 0; k < remainingDogs.size(); ++k ) {
         int thisCost = remainingDogs[k].getObsCost(Bundle.getPosition(), Bundle.getShirtColor());
         if ( thisCost < leastTime ) {
             thisCost = leastTime;
-            thisDog = remainingDogs[k];
+            nextDogIndex = k;
         }
     }
-    Bundle.observeDog(thisDog);
-    return thisDog;
+    Bundle.observeDog(remainingDogs[nextDogIndex]);
+    return nextDogIndex;
 }
 
-int observeAllDogs(Dog& hiddenDogs, int dogsToObserve) {
+int observeAllDogs(vector<Dog>& hiddenDogs, int dogsToObserve) {
     Observer Bundle(dogsToObserve);
     while ( Bundle.getRemainingDogCount() > 0 ) {
-        hiddenDogs.erase(observeNextDog(hiddenDogs, Bundle));
+        hiddenDogs.erase(hiddenDogs.begin() + observeNextDog(hiddenDogs, Bundle));
     }
     return Bundle.getTimeSoFar();
 }
@@ -215,7 +217,7 @@ int runTestCase(ifstream& inFile) {
     */
 }
 
-void main() {
+int main() {
     int totalTestCases;
     int testCase = 0;
     ifstream testSetInput;
@@ -225,12 +227,12 @@ void main() {
     }
     else {
         cout << "Unable to open file " << TESTSETFILE << endl;
-        return;
+        return -1;
     }
     while(testCase <= totalTestCases) {
         cout << "Case #" << testCase << ": " << runTestCase(testSetInput) << endl;
         ++testCase;
     }
     testSetInput.close();
-    return;
+    return 1;
 }
