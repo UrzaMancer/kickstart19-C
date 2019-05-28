@@ -77,16 +77,16 @@ int Observer::getTimeSoFar() {
     return timeTaken;
 }
 
-void Observer::observeDog(int dogPos, int dogColor) {
-    if (shirtColor == dogColor) {
-        timeTaken += abs(dogPos - position);
-        position = dogPos;
+void Observer::observeDog(Dog observationSubject) {
+    if (shirtColor == observationSubject.getColor()) {
+        timeTaken += abs(observationSubject.getPosition() - position);
+        position = observationSubject.getPosition();
         --dogsLeft;
     }
     else {
-        timeTaken += dogPos + position; //Observer has to go home to change shirt, then go to dog
-        shirtColor = dogColor;
-        position = dogPos;
+        timeTaken += observationSubject.getPosition() + position; //Observer has to go home to change shirt, then go to dog
+        shirtColor = observationSubject.getColor();
+        position = observationSubject.getPosition();
         --dogsLeft;
     }
 }
@@ -156,27 +156,34 @@ void findAllDogs(Dog& empytList, ifstream& inFile) {
     }
 }
 
-void observeNextDog(Dog& remainingDogs, int bundlePosition, int bundleColor) {
-    int bundle
+Dog observeNextDog(Dog& remainingDogs, Observer& Bundle) {
+    int leastTime = 200001;
+    Dog thisDog;
     for ( int k = 0; k < remainingDogs.size(); ++k ) {
-        remainingDogs.getObsCost()
+        int thisCost = remainingDogs[k].getObsCost(Bundle.getPosition(), Bundle.getShirtColor());
+        if ( thisCost < leastTime ) {
+            thisCost = leastTime;
+            thisDog = remainingDogs[k];
+        }
     }
+    Bundle.observeDog(thisDog);
+    return thisDog;
 }
+
 int observeAllDogs(Dog& hiddenDogs, int dogsToObserve) {
-    int bundlePosition = 0;
-    int timeTaken = 0;
-    int bundleColor;
-    while ( dogsToObserve > 0 ) {
-        observeNextDog(hiddenDogs, bundlePosition, 0);
+    Observer Bundle(dogsToObserve);
+    while ( Bundle.getRemainingDogCount() > 0 ) {
+        hiddenDogs.erase(observeNextDog(hiddenDogs, Bundle));
     }
+    return Bundle.getTimeSoFar();
 }
 int runTestCase(ifstream& inFile) {
     int numberOfDogs, dogsToObserve;
-    int timeTaken = 0;
     inFile >> numberOfDogs >> dogsToObserve;
     vector<Dog> allDogs;
     allDogs.reserve(numberOfDogs);
     findAllDogs(allDogs, inFile);
+    return observeAllDogs(allDogs, dogsToObserve);
     /*vector<int> buckets = bucketColors(dogColors);
     vector<int> descendingColors;
     descendingColors.reserve(dogsToObserve);
