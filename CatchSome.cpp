@@ -159,20 +159,32 @@ void Observer::observeDog(const Dog& observationSubject) {
     }
 }
 
-void findAllDogs(vector<Dog>& emptyList, ifstream& inFile) {
+vector<int> findAllDogs(vector<Dog>& emptyList, ifstream& inFile) {
     vector<int> dogPosBuffer;
+    vector<int> colorBuckets(1001,0);
+    int colorCount = 0;
     int numberOfDogs = emptyList.capacity();
     dogPosBuffer.reserve(numberOfDogs);
     for(int i = 0; i < numberOfDogs; ++i) {
         inFile >> dogPosBuffer[i];
     }
+    int maxColor = 0;
     for(int j = 0; j < numberOfDogs; ++j) {
         int dogColorBuffer;
         inFile >> dogColorBuffer;
         Dog nextDog(dogPosBuffer[j], dogColorBuffer);
+        if ( ++colorBuckets[nextDog.getColor()] == 1 ) {
+            ++colorCount;
+            if ( nextDog.getColor() > maxColor ) {
+                maxColor = nextDog.getColor();
+            }
+        }
         emptyList.push_back(nextDog);
     }
+    colorBuckets[0] = colorCount;
+    colorBuckets.resize(maxColor + 1);
     std::sort(emptyList.begin(), emptyList.end());
+    return colorBuckets;
 }
 
 void observeNextDogs(vector<Dog>& remainingDogs, Observer& Bundle) {
@@ -214,8 +226,16 @@ void observeNextDogs(vector<Dog>& remainingDogs, Observer& Bundle) {
     }
 }
 
-int observeAllDogs(vector<Dog>& hiddenDogs, int dogsToObserve) {
+int observeAllDogs(vector<Dog>& hiddenDogs, vector<int> colorBuckets, int dogsToObserve) {
     Observer Bundle(dogsToObserve);
+    if (dogsToObserve == hiddenDogs.size()) { //corner case processing: if you have to observe all dogs (N=K) and all are different colors
+        if ( colorBuckets[0] == hiddenDogs.size() ) {
+            for ( Dog d : hiddenDogs ) {
+                Bundle.observeDog(d);
+            }
+            return Bundle.getTimeSoFar();
+        }
+    }
     while ( Bundle.getRemainingDogCount() > 0 ) {
         observeNextDogs(hiddenDogs, Bundle);
     }
@@ -226,8 +246,7 @@ int runTestCase(ifstream& inFile) {
     inFile >> numberOfDogs >> dogsToObserve;
     vector<Dog> allDogs;
     allDogs.reserve(numberOfDogs);
-    findAllDogs(allDogs, inFile);
-    return observeAllDogs(allDogs, dogsToObserve);
+    return observeAllDogs(allDogs, findAllDogs(allDogs, inFile), dogsToObserve);
 }
 
 int main() {
@@ -243,7 +262,9 @@ int main() {
         return -1;
     }
     while(testCase <= totalTestCases) {
-        cout << "Case #" << testCase << ": " << runTestCase(testSetInput) << endl;
+        string testCaseResults = "Case #" + testCase;
+        testCaseResults += ": " + runTestCase(testSetInput);
+        cout << testCaseResults << endl;
         ++testCase;
     }
     testSetInput.close();
