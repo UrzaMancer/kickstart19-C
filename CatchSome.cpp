@@ -82,6 +82,7 @@ bool operator<(const Dog& a, const Dog& b) {
 
 ostream& operator<<(ostream& os, const Dog& d) {
     os << "pos: " << d.getPosition() << " color: " << d.getColor() << endl;
+    return os;
 }
 
 ostream& operator<<(ostream& os, const vector<Dog>& a) {
@@ -90,6 +91,7 @@ ostream& operator<<(ostream& os, const vector<Dog>& a) {
         os << "Dog (" << i << "): " << d; 
         ++i;
     }
+    return os;
 }
 
 ostream& operator<<(ostream& os, const vector<int>& i) {
@@ -100,6 +102,7 @@ ostream& operator<<(ostream& os, const vector<int>& i) {
         ++n;
     }
     os << "]" << endl;
+    return os;
 }
 
 class Observer {
