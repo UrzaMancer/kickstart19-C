@@ -209,11 +209,12 @@ int costToPath(const vector<Dog>& dogList, const Observer& parallelObserver) {
     int minimumCost = 0;
     for (auto it = dogList.begin(); it != dogList.end(); ++it) {
         Observer pathProbe( parallelObserver.getRemainingDogCount(), parallelObserver.getPosition(), parallelObserver.getShirtColor() ); 
-        if (pathProbe.getRemainingDogCount() > 0) {
-            pathProbe.observeDog(*it);
-            otherDogs.erase(oDogsIt);
+        pathProbe.observeDog(*it);
+        otherDogs.erase(oDogsIt);
+        int thisPathCost = pathProbe.getTimeSoFar();
+        if ( pathProbe.getRemainingDogCount() > 0 ) {
+            thisPathCost += costToPath( otherDogs, pathProbe );
         }
-        int thisPathCost = pathProbe.getTimeSoFar() + costToPath(otherDogs, pathProbe);
         if (minimumCost == 0) {
             minimumCost = thisPathCost;
         }
@@ -221,6 +222,7 @@ int costToPath(const vector<Dog>& dogList, const Observer& parallelObserver) {
             minimumCost = thisPathCost;
             //bestPathProbe = pathProbe;
         }
+        ++oDogsIt;
     }
     return minimumCost;
     //return bestPathProbe //.orderObserved //vector<Dog>
