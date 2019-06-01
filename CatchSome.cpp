@@ -125,7 +125,7 @@ class Observer {
 
 Observer::Observer(int dogsToObserve) {
     if (dogsToObserve < 0) {
-       throw (exception);
+        cout << "Observer construct called with negative value: " << dogsToObserve << endl;
     }
     position = 0; //new Observers start at home
     shirtColor = 0; //new Observer has no shirt color
@@ -214,7 +214,7 @@ int costToPath(const vector<Dog>& dogList, const Observer& parallelObserver) {
         pathProbe.observeDog(*it);
         otherDogs.erase(it);
         int thisPathCost = pathProbe.getTimeSoFar() + costToPath(otherDogs, pathProbe);
-        if (minimumCost = 0) {
+        if (minimumCost == 0) {
             minimumCost = thisPathCost;
         }
         else if (minimumCost > thisPathCost) {
