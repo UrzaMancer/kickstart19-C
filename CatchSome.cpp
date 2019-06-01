@@ -204,16 +204,15 @@ int costToPath(const vector<Dog>& dogList, const Observer& parallelObserver) {
     if (dogList.empty()) {
         return 0;
     }
-    if (parallelObserver.getRemainingDogCount() <= 0) {
-        return 0;
-    }
     vector<Dog> otherDogs = dogList;
     auto oDogsIt = otherDogs.begin();
     int minimumCost = 0;
     for (auto it = dogList.begin(); it != dogList.end(); ++it) {
         Observer pathProbe( parallelObserver.getRemainingDogCount(), parallelObserver.getPosition(), parallelObserver.getShirtColor() ); 
-        pathProbe.observeDog(*it);
-        otherDogs.erase(oDogsIt);
+        if (pathProbe.getRemainingDogCount() > 0) {
+            pathProbe.observeDog(*it);
+            otherDogs.erase(oDogsIt);
+        }
         int thisPathCost = pathProbe.getTimeSoFar() + costToPath(otherDogs, pathProbe);
         if (minimumCost == 0) {
             minimumCost = thisPathCost;
@@ -222,7 +221,6 @@ int costToPath(const vector<Dog>& dogList, const Observer& parallelObserver) {
             minimumCost = thisPathCost;
             //bestPathProbe = pathProbe;
         }
-        ++oDogsIt;
     }
     return minimumCost;
     //return bestPathProbe //.orderObserved //vector<Dog>
@@ -310,9 +308,8 @@ int main() {
         return -1;
     }
     while(testCase <= totalTestCases) {
-        string testCaseResults = "Case #" + testCase;
-        testCaseResults += ": " + runTestCase(testSetInput);
-        cout << testCaseResults << endl;
+        int result = runTestCase(testSetInput);
+        cout << "Case #" << testCase << ": " << result << endl;
         ++testCase;
     }
     testSetInput.close();
