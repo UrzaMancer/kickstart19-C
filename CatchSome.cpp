@@ -115,6 +115,7 @@ class Observer {
 
     public:
     Observer(int);
+    Observer(int, int, int);
     int getPosition() const;
     int getShirtColor() const;
     int getRemainingDogCount() const;
@@ -123,10 +124,21 @@ class Observer {
 };
 
 Observer::Observer(int dogsToObserve) {
+    if (dogsToObserve < 0) {
+       throw (exception);
+    }
     position = 0; //new Observers start at home
     shirtColor = 0; //new Observer has no shirt color
     dogsLeft = dogsToObserve;
     timeTaken = 0; //new Observe has not taken any seconds
+    orderObserved.reserve(dogsToObserve);
+}
+
+Observer::Observer(int dogsToObserve, int startPosition, int startShirtColor) {
+    position = startPosition;
+    shirtColor = startShirtColor; 
+    dogsLeft = dogsToObserve;
+    timeTaken = 0;
     orderObserved.reserve(dogsToObserve);
 }
 
@@ -189,19 +201,32 @@ vector<int> findAllDogs(vector<Dog>& emptyList, ifstream& inFile) {
 
 
 int costToPath(const vector<Dog>& dogList, const Observer& parallelObserver) {
-    //parallelObserver.getTimeSoFar() should not be 0; we need to set a sentinel to identify shortest cost
-    vector<Dog> otherDogs;
-
-    for (auto it = dogList.begin(); it != dogList.end(); ++it) {
-        Observer pathProbe(parallelObserver.getRemainingDogCount() - 1);
-        otherDogs.assign( dogList.begin(), (it - 1) );
-        otherDogs.insert( otherDogs.end(), (it + 1), dogList.end() ); 
-        parallelObserver.observeDog(*it);
-        return costToPath(otherDogs, new Observer(parallelObserver.getRemainingDogCount() - 1));
+    if (dogList.empty()) {
+        return 0;
     }
-    //TODO: I want to remove the object I'm looking at from the vector, and then recurse on the list of the rest of the objects. Can I do this using this syntax?
+    if (parallelObserver.getRemainingDogCount() <= 0) {
+        return 0;
+    }
+    vector<Dog> otherDogs = dogList;
+    int minimumCost = 0;
+    for (auto it = otherDogs.begin(); it != otherDogs.end(); ++it) {
+        Observer pathProbe( parallelObserver.getRemainingDogCount(), parallelObserver.getPosition(), parallelObserver.getShirtColor() ); 
+        pathProbe.observeDog(*it);
+        otherDogs.erase(it);
+        int thisPathCost = pathProbe.getTimeSoFar() + costToPath(otherDogs, pathProbe);
+        if (minimumCost = 0) {
+            minimumCost = thisPathCost;
+        }
+        else if (minimumCost > thisPathCost) {
+            minimumCost = thisPathCost;
+            //bestPathProbe = pathProbe;
+        }
+    }
+    return minimumCost;
+    //return bestPathProbe //.orderObserved //vector<Dog>
 }
 
+/*
 void observeNextDogs(vector<Dog>& remainingDogs, Observer& Bundle) {
     cout << remainingDogs;
     int leastTime = remainingDogs[0].getObsCost(Bundle.getPosition(), Bundle.getShirtColor());
@@ -240,6 +265,7 @@ void observeNextDogs(vector<Dog>& remainingDogs, Observer& Bundle) {
         ++offset;
     }
 }
+*/
 
 int observeAllDogs(vector<Dog>& hiddenDogs, vector<int> colorBuckets, int dogsToObserve) {
     Observer Bundle(dogsToObserve);
@@ -251,11 +277,14 @@ int observeAllDogs(vector<Dog>& hiddenDogs, vector<int> colorBuckets, int dogsTo
             return Bundle.getTimeSoFar();
         }
     }
-    int minimumCost = costToPath(hiddenDogs, new Observer pathProbe(dogsToObserve));
+
+    return costToPath(hiddenDogs, Bundle); 
+/*
     while ( Bundle.getRemainingDogCount() > 0 ) {
         observeNextDogs(hiddenDogs, Bundle);
     }
     return Bundle.getTimeSoFar();
+    */
 }
 
 int runTestCase(ifstream& inFile) {
