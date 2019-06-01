@@ -111,15 +111,15 @@ class Observer {
     int shirtColor;
     int dogsLeft;
     int timeTaken;
+    vector<Dog> orderObserved;
 
     public:
     Observer(int);
-    int getPosition();
-    int getShirtColor();
-    int getRemainingDogCount();
-    int getTimeSoFar();
+    int getPosition() const;
+    int getShirtColor() const;
+    int getRemainingDogCount() const;
+    int getTimeSoFar() const;
     void observeDog(const Dog&);
-    void changeShirt(int);
 };
 
 Observer::Observer(int dogsToObserve) {
@@ -127,36 +127,36 @@ Observer::Observer(int dogsToObserve) {
     shirtColor = 0; //new Observer has no shirt color
     dogsLeft = dogsToObserve;
     timeTaken = 0; //new Observe has not taken any seconds
+    orderObserved.reserve(dogsToObserve);
 }
 
-int Observer::getPosition() {
+int Observer::getPosition() const {
     return position;
 }
 
-int Observer::getShirtColor() {
+int Observer::getShirtColor() const {
     return shirtColor;
 }
 
-int Observer::getRemainingDogCount() {
+int Observer::getRemainingDogCount() const {
     return dogsLeft;
 }
 
-int Observer::getTimeSoFar() {
+int Observer::getTimeSoFar() const {
     return timeTaken;
 }
 
 void Observer::observeDog(const Dog& observationSubject) {
     if (shirtColor == observationSubject.getColor()) {
         timeTaken += abs(observationSubject.getPosition() - position);
-        position = observationSubject.getPosition();
-        --dogsLeft;
     }
     else {
         timeTaken += observationSubject.getPosition() + position; //Observer has to go home to change shirt, then go to dog
         shirtColor = observationSubject.getColor();
-        position = observationSubject.getPosition();
-        --dogsLeft;
     }
+    position = observationSubject.getPosition();
+    --dogsLeft;
+    orderObserved.push_back(observationSubject);
 }
 
 vector<int> findAllDogs(vector<Dog>& emptyList, ifstream& inFile) {
@@ -185,6 +185,21 @@ vector<int> findAllDogs(vector<Dog>& emptyList, ifstream& inFile) {
     colorBuckets.resize(maxColor + 1);
     std::sort(emptyList.begin(), emptyList.end());
     return colorBuckets;
+}
+
+
+int costToPath(const vector<Dog>& dogList, const Observer& parallelObserver) {
+    //parallelObserver.getTimeSoFar() should not be 0; we need to set a sentinel to identify shortest cost
+    vector<Dog> otherDogs;
+
+    for (auto it = dogList.begin(); it != dogList.end(); ++it) {
+        Observer pathProbe(parallelObserver.getRemainingDogCount() - 1);
+        otherDogs.assign( dogList.begin(), (it - 1) );
+        otherDogs.insert( otherDogs.end(), (it + 1), dogList.end() ); 
+        parallelObserver.observeDog(*it);
+        return costToPath(otherDogs, new Observer(parallelObserver.getRemainingDogCount() - 1));
+    }
+    //TODO: I want to remove the object I'm looking at from the vector, and then recurse on the list of the rest of the objects. Can I do this using this syntax?
 }
 
 void observeNextDogs(vector<Dog>& remainingDogs, Observer& Bundle) {
@@ -236,11 +251,13 @@ int observeAllDogs(vector<Dog>& hiddenDogs, vector<int> colorBuckets, int dogsTo
             return Bundle.getTimeSoFar();
         }
     }
+    int minimumCost = costToPath(hiddenDogs, new Observer pathProbe(dogsToObserve));
     while ( Bundle.getRemainingDogCount() > 0 ) {
         observeNextDogs(hiddenDogs, Bundle);
     }
     return Bundle.getTimeSoFar();
 }
+
 int runTestCase(ifstream& inFile) {
     int numberOfDogs, dogsToObserve;
     inFile >> numberOfDogs >> dogsToObserve;
