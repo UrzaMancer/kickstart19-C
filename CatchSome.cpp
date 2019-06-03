@@ -111,9 +111,9 @@ class Observer {
     int shirtColor;
     int dogsLeft;
     int timeTaken;
-    vector<Dog> orderObserved;
 
     public:
+    vector<Dog> orderObserved;
     Observer(int);
     Observer(int, int, int);
     int getPosition() const;
@@ -204,80 +204,30 @@ int costToPath(const vector<Dog>& dogList, const Observer& parallelObserver) {
     if (dogList.empty()) {
         return 0;
     }
-    vector<Dog> otherDogs = dogList;
-    int pos = parallelObserver.getPosition();
-    int col = parallelObserver.getShirtColor();
     int minimumCost = 0;
     for (auto it = dogList.begin(); it != dogList.end(); ++it) {
-        Observer pathProbe( parallelObserver.getRemainingDogCount(), pos, col);
+        Observer pathProbe( parallelObserver.getRemainingDogCount(), parallelObserver.getPosition(), parallelObserver.getShirtColor() );
         pathProbe.observeDog(*it);
         int thisPathCost = pathProbe.getTimeSoFar();
         if ( pathProbe.getRemainingDogCount() > 0 ) {
             vector<Dog> otherDogs;
             if ( dogList.begin() != it ) {
-                otherDogs.assign( dogList.begin(), it - 1);
+                otherDogs.assign( dogList.begin(), it );
             }
             if ( it != dogList.end() - 1 ) {
                 otherDogs.insert ( otherDogs.end(), it + 1, dogList.end());
             }
             thisPathCost += costToPath( otherDogs, pathProbe );
         }
-        else {
-            pos = pathProbe.getPosition();
-            col = pathProbe.getShirtColor();
-        }
         if (minimumCost == 0) {
             minimumCost = thisPathCost;
         }
         else if (minimumCost > thisPathCost) {
             minimumCost = thisPathCost;
-            //bestPathProbe = pathProbe;
         }
     }
     return minimumCost;
-    //return bestPathProbe //.orderObserved //vector<Dog>
 }
-
-/*
-void observeNextDogs(vector<Dog>& remainingDogs, Observer& Bundle) {
-    cout << remainingDogs;
-    int leastTime = remainingDogs[0].getObsCost(Bundle.getPosition(), Bundle.getShirtColor());
-    int dogsToObserve = 1;
-    vector<int> nextDogs = {0};
-    for ( int k = 1; k < remainingDogs.size(); ++k ) {
-        int thisCost = remainingDogs[k].getObsCost(Bundle.getPosition(), Bundle.getShirtColor());
-        int thisDogsSameColor = 1;
-        vector<int> dogIndices;
-        cout << "k=" << k << ", leastTime=" << leastTime << ", thisCost=" << thisCost << endl;
-        for ( int n = k - 1; n >= 0; --n ) {
-            if ( remainingDogs[k].getColor() == remainingDogs[n].getColor() ) {
-                ++thisDogsSameColor;
-                dogIndices.push_back(n);
-            }
-        }
-        thisCost = thisCost / thisDogsSameColor;
-        if ( thisCost < leastTime ) {
-            leastTime = thisCost;
-            dogsToObserve = thisDogsSameColor;
-            dogIndices.push_back(k);
-            nextDogs = dogIndices;
-        }
-        else if ( ( thisCost == leastTime ) && ( thisDogsSameColor > dogsToObserve) ) {
-            dogsToObserve = thisDogsSameColor;
-            dogIndices.push_back(k);
-            nextDogs = dogIndices;
-        }
-        cout << nextDogs;
-    }
-    int offset = 0;
-    for(int index : nextDogs) {
-        cout << "removing " << remainingDogs[index - offset];
-        Bundle.observeDog(remainingDogs[index - offset]);
-        remainingDogs.erase(remainingDogs.begin() + index - offset);
-        ++offset;
-    }
-}
-*/
 
 int observeAllDogs(vector<Dog>& hiddenDogs, vector<int> colorBuckets, int dogsToObserve) {
     Observer Bundle(dogsToObserve);
@@ -291,12 +241,6 @@ int observeAllDogs(vector<Dog>& hiddenDogs, vector<int> colorBuckets, int dogsTo
     }
 
     return costToPath(hiddenDogs, Bundle); 
-/*
-    while ( Bundle.getRemainingDogCount() > 0 ) {
-        observeNextDogs(hiddenDogs, Bundle);
-    }
-    return Bundle.getTimeSoFar();
-    */
 }
 
 int runTestCase(ifstream& inFile) {
