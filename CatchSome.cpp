@@ -36,7 +36,8 @@ Memory limit: 1GB.
 1 ≤ Pi ≤ 105.
 */
 
-const bool debug = true;
+//const bool debug = true;
+const bool testing = true;
 
 class Dog {
     private:
@@ -171,7 +172,7 @@ void Observer::observeDog(const Dog& observationSubject) {
     orderObserved.push_back(observationSubject);
 }
 
-vector<int> findAllDogs(vector<Dog>& emptyList, ifstream& inFile) {
+vector<int> findAllDogs(vector<Dog>& emptyList, istream& inFile) {
     vector<int> dogPosBuffer;
     vector<int> colorBuckets(1001,0);
     int colorCount = 0;
@@ -243,7 +244,7 @@ int observeAllDogs(vector<Dog>& hiddenDogs, vector<int> colorBuckets, int dogsTo
     return costToPath(hiddenDogs, Bundle); 
 }
 
-int runTestCase(ifstream& inFile) {
+int runTestCase(istream& inFile) {
     int numberOfDogs, dogsToObserve;
     inFile >> numberOfDogs >> dogsToObserve;
     vector<Dog> allDogs;
@@ -254,20 +255,29 @@ int runTestCase(ifstream& inFile) {
 int main() {
     int totalTestCases;
     int testCase = 1;
-    ifstream testSetInput;
-    testSetInput.open(TESTSETFILE);
-    if (testSetInput.is_open()) {
-        testSetInput >> totalTestCases;
+    if (testing) {
+        ifstream testSetInput;
+        testSetInput.open(TESTSETFILE);
+        if (testSetInput.is_open()) {
+            testSetInput >> totalTestCases;
+        }
+        else {
+            cout << "Unable to open file " << TESTSETFILE << endl;
+            return -1;
+        }
+        while(testCase <= totalTestCases) {
+            int result = runTestCase(testSetInput);
+            cout << "Case #" << testCase << ": " << result << endl;
+            ++testCase;
+        }
+        testSetInput.close();
     }
     else {
-        cout << "Unable to open file " << TESTSETFILE << endl;
-        return -1;
+        while(testCase <= totalTestCases) {
+            int result = runTestCase(cin);
+            cout << "Case #" << testCase << ": " << result << endl;
+            ++testCase;
+        }
     }
-    while(testCase <= totalTestCases) {
-        int result = runTestCase(testSetInput);
-        cout << "Case #" << testCase << ": " << result << endl;
-        ++testCase;
-    }
-    testSetInput.close();
     return 1;
 }
