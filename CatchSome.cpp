@@ -37,7 +37,7 @@ Memory limit: 1GB.
 */
 
 //const bool debug = true;
-const bool testing = true;
+const bool testing = false;
 
 class Dog {
     private:
@@ -273,11 +273,13 @@ int main() {
         testSetInput.close();
     }
     else {
+        istream& testSetInput = cin;
+        cin >> totalTestCases;
         while(testCase <= totalTestCases) {
             int result = runTestCase(cin);
             cout << "Case #" << testCase << ": " << result << endl;
             ++testCase;
         }
     }
-    return 1;
+    return 0; //This has to return 0 or kickstart platform will give Runtime Error 
 }
